@@ -6,6 +6,14 @@ Java based encryption / decryption program, with GUI interface
    * Simple GUI Interface
    * Save/Load Created Keys
 
+## Demo Video
+[![IMAGE ALT TEXT HERE](http://i.imgur.com/LJo7GYW.png)](https://www.youtube.com/watch?v=xbM4SDkMtKA)
+
+## Program images
+![alt tag](screen_shots/unencrypted_data.png)
+![alt tag](screen_shots/encrypted_data.png)
+
+
 ## Installation
    * Download the Repo, compile and use
 
