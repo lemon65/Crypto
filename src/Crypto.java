@@ -214,7 +214,9 @@ public class Crypto extends JFrame{
 		Button button_3 = new Button("Load Key");
 		button_3.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				File workingDirectory = new File(System.getProperty("user.dir"));
 		        JFileChooser fileChooser = new JFileChooser();
+		        fileChooser.setCurrentDirectory(workingDirectory);
 		        int returnValue = fileChooser.showOpenDialog(null);
 		        if (returnValue == JFileChooser.APPROVE_OPTION) {
 		          File selectedFile = fileChooser.getSelectedFile();
