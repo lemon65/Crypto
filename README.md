@@ -15,7 +15,7 @@ Java based encryption / decryption program, with GUI interface
 
 
 ## Installation
-   * Download the Repo, compile and use
+   * Download the latest release here - https://github.com/lemon65/Crypto/releases
 
 ## Requirements:
    * Java 8 installed
