@@ -11,13 +11,10 @@ Java based encryption / decryption program, with GUI interface
 
 ## Program Images
 
-![alt tag](screen_shots/unencrypted_data.png)
-
-![alt tag](screen_shots/encrypted_data.png)
-
-![alt tag](screen_shots/image_steganography_1.png)
-
-![alt tag](screen_shots/image_steganography_2.png)
+screen_shots/unencrypted_data.png
+screen_shots/encrypted_data.png
+screen_shots/image_steganography_1.png
+screen_shots/image_steganography_2.png
 
 
 ## Installation
