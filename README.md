@@ -11,10 +11,7 @@ Java based encryption / decryption program, with GUI interface
 
 ## Program Images
 
-screen_shots/unencrypted_data.png
-screen_shots/encrypted_data.png
-screen_shots/image_steganography_1.png
-screen_shots/image_steganography_2.png
+Link to Screen Shots -- http://imgur.com/a/MmaWz
 
 
 ## Installation
