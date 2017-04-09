@@ -10,6 +10,7 @@ Java based encryption / decryption program, with GUI interface
 [![IMAGE ALT TEXT HERE](http://i.imgur.com/LJo7GYW.png)](https://www.youtube.com/watch?v=xbM4SDkMtKA)
 
 ## Program Images
+
 ![alt tag](screen_shots/unencrypted_data.png)
 ![alt tag](screen_shots/encrypted_data.png)
 ![alt tag](screen_shots/image_steganography_1.png)
