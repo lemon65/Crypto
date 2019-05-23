@@ -4,7 +4,9 @@ Java based encryption / decryption program, with GUI interface
 ## Features:
    * AES Encryption
    * Simple GUI Interface
-   * Save/Load Created Keys
+   * Save/Load/Generate Keys
+   * Encrypt Text/Files
+   * Hide Text within any image!
 
 ## Demo Video
 [![IMAGE ALT TEXT HERE](http://i.imgur.com/LJo7GYW.png)](https://www.youtube.com/watch?v=xbM4SDkMtKA)
@@ -25,9 +27,6 @@ Link to Screen Shots -- http://imgur.com/a/MmaWz
 
 ## Help:
   * If you need help you can email me @ lemon65.twitch@gmail.com, or talk with me on our discord [https://discord.gg/GPuthMD]. user name is lemon65. 
-
-## Notes:
-  * This Program is only used to Encrypt/Decrypt Text. 
 
 ## Copyright:
 
