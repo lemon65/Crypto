@@ -23,6 +23,8 @@ import java.awt.TextArea;
 import java.awt.Toolkit;
 import javax.swing.JTextArea;
 import javax.swing.JScrollPane;
+
+import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
@@ -30,13 +32,19 @@ import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Calendar;
 import java.util.EmptyStackException;
+
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.awt.TextField;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
+import java.awt.Panel;
+import java.awt.SystemColor;
 
 
 @SuppressWarnings("serial")
@@ -46,10 +54,10 @@ public class Crypto extends JFrame{
 	public String passwd = null;
 	public String user_data = null;
 	public String encrypted_data = null;
-	public String tmp_buff = null;
 	byte[] encrypted = null;
 	byte[] decrypted = null;
 	private JTextField target_image_textField;
+	private JTextField target_file_textField;
 	
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -80,7 +88,8 @@ public class Crypto extends JFrame{
 				tabbedPane_1.setBounds(10, 11, 512, 515);
 				contentPane.add(tabbedPane_1);
 				
-				// ##################################### Starting Pane for Text Ecryption #####################################
+				// ##################################### Starting Pane for Text Encryption #####################################
+				AES_Helpers aes_hp = new AES_Helpers();
 				JPanel text_encryption_panel = new JPanel();
 				tabbedPane_1.addTab("Text Encryption", null, text_encryption_panel, null);
 				text_encryption_panel.setLayout(null);
@@ -89,7 +98,7 @@ public class Crypto extends JFrame{
 				TextArea debug = new TextArea();
 				debug.setBounds(10, 378, 477, 99);
 				text_encryption_panel.add(debug);
-				debug.setFont(new Font("Monospaced", Font.PLAIN, 9));
+				debug.setFont(new Font("Monospaced", Font.PLAIN, 12));
 				debug.setBackground(Color.WHITE);
 				debug.setEditable(false);
 				
@@ -110,7 +119,7 @@ public class Crypto extends JFrame{
 				
 				//area for the user to add text to be encrypted
 				JTextArea user_input = new JTextArea();
-				user_input.setFont(new Font("Tahoma", Font.PLAIN, 14));
+				user_input.setFont(new Font("Tahoma", Font.PLAIN, 12));
 				user_input.setText("Welcome To Crypto, Update the Text Here!");
 				user_input.setToolTipText("Please Input Text HERE");
 				scrollPane.setViewportView(user_input);
@@ -120,7 +129,7 @@ public class Crypto extends JFrame{
 				text_encryption_panel.add(lblNewLabel);
 				
 						JLabel lblDebugoutput = new JLabel("Debug_Output");
-						lblDebugoutput.setBounds(10, 358, 88, 14);
+						lblDebugoutput.setBounds(10, 365, 88, 14);
 						text_encryption_panel.add(lblDebugoutput);
 						lblDebugoutput.setFont(new Font("Tahoma", Font.PLAIN, 9));
 						
@@ -139,37 +148,19 @@ public class Crypto extends JFrame{
 						text_encryption_panel.add(Save_button);
 						Save_button.addActionListener(new ActionListener() {
 							public void actionPerformed(ActionEvent e) {
-								String save_pass = passwordField.getText();
-								try {
-									DateFormat df = new SimpleDateFormat("dd-MM-yy_HH-mm-ss");
-									Calendar calobj = Calendar.getInstance();
-									String file_name = df.format(calobj.getTime()) + ".txt";
-									PrintWriter writer = new PrintWriter(file_name, "UTF-8");
-									writer.println(save_pass);
-									debug.append("Saved Key to File: " + file_name + "\n");
-									writer.close();
-								} catch (FileNotFoundException e1) {debug.append("### Saving Error: FileNotFoundException\n");
-								} catch (UnsupportedEncodingException e1) {debug.append("### Saving Error: UnsupportedEncodingException\n");
-								}
+								String pass_key = passwordField.getText();
+								aes_hp.save_key_to_file(debug, pass_key);  // SAVE a key to a file
 							}
 						});
 						Save_button.setFont(new Font("Tahoma", Font.PLAIN, 12));
-						Save_button.setBackground(new Color(0, 191, 255));
-						
+						Save_button.setBackground(new Color(0, 191, 255));						
 						Button Gen_button = new Button("Gen Key");
 						Gen_button.setBounds(399, 311, 88, 22);
 						text_encryption_panel.add(Gen_button);
+						
 						Gen_button.addActionListener(new ActionListener() {
 							public void actionPerformed(ActionEvent e) {
-								debug.append("Created a new Key!\n");
-								KeyGenerator gen = null;
-								try {gen = KeyGenerator.getInstance("AES");
-								} catch (NoSuchAlgorithmException e1) {e1.printStackTrace();}
-								gen.init(128); /* 128-bit AES */
-								SecretKey secret = gen.generateKey();
-								byte[] binary = secret.getEncoded();
-								String key = String.format("%032X", new BigInteger(+1, binary));
-								key = key.substring(0, Math.min(key.length(), 16));
+								String key = aes_hp.create_aes_key(debug);  // CREATE a key to use
 								passwordField.setText(key);
 							}
 						});
@@ -181,19 +172,8 @@ public class Crypto extends JFrame{
 						text_encryption_panel.add(Load_button);
 						Load_button.addActionListener(new ActionListener() {
 							public void actionPerformed(ActionEvent e) {
-								File workingDirectory = new File(System.getProperty("user.dir"));
-						        JFileChooser fileChooser = new JFileChooser();
-						        fileChooser.setCurrentDirectory(workingDirectory);
-						        int returnValue = fileChooser.showOpenDialog(null);
-						        if (returnValue == JFileChooser.APPROVE_OPTION) {
-						          File selectedFile = fileChooser.getSelectedFile();
-						          try (BufferedReader buffer = new BufferedReader(new FileReader(selectedFile))) {
-						        		String firstLine = buffer.readLine();
-						        		passwordField.setText(firstLine);
-						        	} catch (IOException ex) {
-						        		debug.append("### Loading Error: IOException\n");
-						        	}
-						        }
+								String pass_key = aes_hp.load_key_from_file(debug);  // LOAD a key from a file
+								passwordField.setText(pass_key);
 							}
 						});
 						Load_button.setFont(new Font("Tahoma", Font.PLAIN, 12));
@@ -213,50 +193,141 @@ public class Crypto extends JFrame{
 						
 						GO_button.addActionListener(new ActionListener() {
 						public void actionPerformed(ActionEvent arg0){
-						String current_mode = choice.getSelectedItem();// picking the current mode
-						String user_data = user_input.getText();
-						String passwd = passwordField.getText();
-						if(user_data==null || user_data.isEmpty()){user_data = null;}
-						if(passwd==null || passwd.isEmpty()){passwd = null;}
-						// Debugging data out to the user!
-						debug.append("Running using Mode: " + current_mode + "\n");// debug out to the user..
-						if(user_data == null || passwd == null){// Check that the user has given a password and Text data!
-							debug.append("### ERROR, Please make sure you have entered a Private Key and Encryptable Text ### \n");
-							JOptionPane.showMessageDialog(null,"Please make sure you have entered a Private Key and Encryptable Text");
-							throw new EmptyStackException();
+							String current_mode = choice.getSelectedItem();// picking the current mode
+							String user_data = user_input.getText();
+							String passwd = passwordField.getText();
+							aes_hp.processString(user_data, passwd, current_mode, debug, user_input);
 						}
-						debug.append("ingesting your Key...\n");
-			            Key aesKey = new SecretKeySpec(passwd.getBytes(), "AES");
-			            try {Cipher cipher = Cipher.getInstance("AES");
-			            if (current_mode == "Encrypt"){
-			            	debug.append("Working on Encrypting data\n");
-			            	cipher.init(Cipher.ENCRYPT_MODE, aesKey);
-			            	byte[] encrypted = cipher.doFinal(user_data.getBytes());
-			            	tmp_buff = new String(Base64.getEncoder().encodeToString(encrypted));
-			            	user_input.setText(tmp_buff);
-			            }
-						if(current_mode == "Decrypt"){
-							debug.append("Working on Decrypting data\n");
-							byte[] encrypted = Base64.getDecoder().decode(user_data);
-							cipher.init(Cipher.DECRYPT_MODE, aesKey);
-							String decrypted = new String(cipher.doFinal(encrypted));
-							user_input.setText(decrypted);
-						} 
-	            debug.append("##################### END OF CODE #####################\n");
-	            } catch (Exception e) {debug.append(e.toString() + "\n");} 
-					}});
+					});
 		choice.add("Encrypt");
-		choice.add("Decrypt");
-		KeyGenerator gen = null;
-		try {
-			gen = KeyGenerator.getInstance("AES");
-		} catch (NoSuchAlgorithmException e1) {e1.printStackTrace();
-		}
-		gen.init(128); /* 128-bit AES */
-		SecretKey secret = gen.generateKey();
-		byte[] binary = secret.getEncoded();
-		String key = String.format("%032X", new BigInteger(+1, binary));
-		key = key.substring(0, Math.min(key.length(), 16));
+		choice.add("Decrypt");		
+		
+		// ##################################### Starting Pane for File_Encryption #####################################
+			Panel file_encryption_panel = new Panel();
+			file_encryption_panel.setBackground(SystemColor.menu);
+			tabbedPane_1.addTab("File Encryption", null, file_encryption_panel, null);
+			file_encryption_panel.setLayout(null);
+			
+			TextArea fe_debug_area = new TextArea();
+			fe_debug_area.setBounds(10, 156, 487, 321);
+			fe_debug_area.setFont(new Font("Monospaced", Font.PLAIN, 12));
+			file_encryption_panel.add(fe_debug_area);
+			
+			target_file_textField = new JTextField();
+			target_file_textField.setToolTipText("Path to a File");
+			target_file_textField.setEditable(false);
+			target_file_textField.setColumns(10);
+			target_file_textField.setBounds(120, 11, 377, 20);
+			file_encryption_panel.add(target_file_textField);
+			
+
+			Button target_file_btn = new Button("Target File");
+			target_file_btn.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent arg0) {
+					File workingDirectory = new File(System.getProperty("user.dir"));
+			        JFileChooser fileChooser = new JFileChooser();
+			        fileChooser.setCurrentDirectory(workingDirectory);
+			        int returnValue = fileChooser.showOpenDialog(null);
+			        if (returnValue == JFileChooser.APPROVE_OPTION) {
+			          File targetFile = fileChooser.getSelectedFile();
+			          	fe_debug_area.append("Using File: " + targetFile.toString() + "\n");
+			          	target_file_textField.setText(targetFile.toString());
+			        }
+				}
+			});
+			target_file_btn.setFont(new Font("Tahoma", Font.PLAIN, 12));
+			target_file_btn.setBackground(new Color(0, 191, 255));
+			target_file_btn.setBounds(10, 9, 94, 22);
+			file_encryption_panel.add(target_file_btn);
+			
+			Choice set_fe_mode = new Choice();
+			set_fe_mode.setBounds(20, 68, 182, 20);
+			set_fe_mode.add("Encrypt");
+			set_fe_mode.add("Decrypt");
+			file_encryption_panel.add(set_fe_mode);
+			
+			JLabel label = new JLabel("Mode");
+			label.setBounds(20, 48, 150, 14);
+			file_encryption_panel.add(label);
+			
+			JLabel label_1 = new JLabel("Save OR Enter a Key");
+			label_1.setBounds(223, 46, 150, 14);
+			file_encryption_panel.add(label_1);
+			
+			TextField fe_key_field = new TextField();
+			fe_key_field.setEditable(true);
+			fe_key_field.setBounds(223, 66, 166, 22);
+			file_encryption_panel.add(fe_key_field);
+			
+			Button fe_save_btn = new Button("Save Key");
+			fe_save_btn.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					String pass_key = fe_key_field.getText();
+					aes_hp.save_key_to_file(fe_debug_area, pass_key);
+				}
+			});
+			fe_save_btn.setFont(new Font("Tahoma", Font.PLAIN, 12));
+			fe_save_btn.setBackground(new Color(0, 191, 255));
+			fe_save_btn.setBounds(208, 94, 88, 22);
+			file_encryption_panel.add(fe_save_btn);
+			
+			Button fe_load_btn = new Button("Load Key");
+			fe_load_btn.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					String pass_key = aes_hp.load_key_from_file(fe_debug_area);
+					fe_key_field.setText(pass_key);
+				}
+			});
+			fe_load_btn.setFont(new Font("Tahoma", Font.PLAIN, 12));
+			fe_load_btn.setBackground(new Color(30, 144, 255));
+			fe_load_btn.setBounds(301, 94, 88, 22);
+			file_encryption_panel.add(fe_load_btn);
+			
+			Button fe_go_btn = new Button("GO");
+			fe_go_btn.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					String current_mode = set_fe_mode.getSelectedItem();// picking the current mode
+					String target_file = target_file_textField.getText();
+					String passwd = fe_key_field.getText();
+					try {
+							aes_hp.processFile(passwd, current_mode, target_file, fe_debug_area);
+						
+					} catch (InvalidKeyException e1) {
+						e1.printStackTrace();
+					} catch (IllegalBlockSizeException e1) {
+						e1.printStackTrace();
+					} catch (BadPaddingException e1) {
+						e1.printStackTrace();
+					} catch (NoSuchPaddingException e1) {
+						e1.printStackTrace();
+					} catch (NoSuchAlgorithmException e1) {
+						e1.printStackTrace();
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+				}
+			});
+			fe_go_btn.setFont(new Font("Tahoma", Font.PLAIN, 12));
+			fe_go_btn.setBackground(new Color(50, 205, 50));
+			fe_go_btn.setBounds(395, 48, 88, 40);
+			file_encryption_panel.add(fe_go_btn);
+			
+			Button fe_gen_btn = new Button("Gen Key");
+			fe_gen_btn.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					String pass_key = aes_hp.create_aes_key(fe_debug_area);
+					fe_key_field.setText(pass_key);
+				}
+			});
+			fe_gen_btn.setFont(new Font("Tahoma", Font.PLAIN, 12));
+			fe_gen_btn.setBackground(Color.YELLOW);
+			fe_gen_btn.setBounds(395, 94, 88, 22);
+			file_encryption_panel.add(fe_gen_btn);
+			
+			JLabel label_2 = new JLabel("Debug_Output");
+			label_2.setFont(new Font("Tahoma", Font.PLAIN, 9));
+			label_2.setBounds(10, 142, 88, 14);
+			file_encryption_panel.add(label_2);
 		
 		
 		// ##################################### Starting Pane for steganography #####################################
@@ -268,21 +339,21 @@ public class Crypto extends JFrame{
 		stg_set_mode.setBounds(10, 342, 182, 36);
 		stg_set_mode.add("Insert");
 		stg_set_mode.add("Extract");
-		
-		TextArea stg_debug_area = new TextArea();
-		stg_debug_area.setFont(new Font("Monospaced", Font.PLAIN, 9));
-		stg_debug_area.setBounds(10, 381, 487, 96);
-		image_steganography.add(stg_debug_area);
 		image_steganography.add(stg_set_mode);
 		
+		TextArea stg_debug_area = new TextArea();
+		stg_debug_area.setFont(new Font("Monospaced", Font.PLAIN, 12));
+		stg_debug_area.setBounds(10, 381, 487, 96);
+		image_steganography.add(stg_debug_area);
+		
 		TextArea steg_textArea = new TextArea();
-		steg_textArea.setFont(new Font("Tahoma", Font.PLAIN, 14));
+		steg_textArea.setFont(new Font("Tahoma", Font.PLAIN, 12));
 		steg_textArea.setText("Hide Text within images, with this simple tool!");
 		steg_textArea.setBounds(10, 10, 487, 275);
 		image_steganography.add(steg_textArea);
 		
 		target_image_textField = new JTextField();
-		target_image_textField.setToolTipText("Path to an image");
+		target_image_textField.setToolTipText("Path to an image (.jpg OR .png)");
 		target_image_textField.setEditable(false);
 		target_image_textField.setBounds(120, 291, 377, 20);
 		image_steganography.add(target_image_textField);
@@ -300,7 +371,7 @@ public class Crypto extends JFrame{
 		        if (returnValue == JFileChooser.APPROVE_OPTION) {
 		          File targetimageFile = fileChooser.getSelectedFile();
 		          	stg_debug_area.append("Using File: " + targetimageFile.toString() + "\n");
-		          	target_image_textField.setText(targetimageFile.toString());
+		          	target_image_textField.setText(targetimageFile.toString().toLowerCase());
 		        }
 			}
 		});
@@ -367,7 +438,10 @@ public class Crypto extends JFrame{
 		mode_lab.setBounds(10, 322, 150, 14);
 		image_steganography.add(mode_lab);
 		
-		
+		JLabel label_3 = new JLabel("Debug_Output");
+		label_3.setFont(new Font("Tahoma", Font.PLAIN, 9));
+		label_3.setBounds(10, 368, 88, 14);
+		image_steganography.add(label_3);
 		
 		
 	}
