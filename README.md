@@ -28,6 +28,9 @@ Link to Screen Shots -- http://imgur.com/a/MmaWz
 ## Help:
   * If you need help you can email me @ lemon65.twitch@gmail.com, or talk with me on our discord [https://discord.gg/GPuthMD]. user name is lemon65. 
 
+## Disclaimer:
+  * I am not the NSA, this program was made for fun and might have security flaws. please use at your own risk. 
+
 ## Copyright:
 
 #################### Copyright (c) 2016 RamCommunity #################
