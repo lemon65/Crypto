@@ -10,42 +10,25 @@ import java.awt.Font;
 import java.awt.Button;
 import java.awt.Choice;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
 import java.awt.event.ActionEvent;
 import java.awt.TextArea;
 import java.awt.Toolkit;
 import javax.swing.JTextArea;
 import javax.swing.JScrollPane;
-
 import java.security.InvalidKeyException;
-import java.security.Key;
 import java.security.NoSuchAlgorithmException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Base64;
-import java.util.Calendar;
+import java.util.ArrayList;
 import java.util.EmptyStackException;
-
 import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 import java.awt.TextField;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import java.awt.Panel;
 import java.awt.SystemColor;
-
 
 @SuppressWarnings("serial")
 public class Crypto extends JFrame{
@@ -58,6 +41,7 @@ public class Crypto extends JFrame{
 	byte[] decrypted = null;
 	private JTextField target_image_textField;
 	private JTextField target_file_textField;
+	ArrayList<String> target_files_array = new ArrayList<String>();
 	
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -214,26 +198,36 @@ public class Crypto extends JFrame{
 			file_encryption_panel.add(fe_debug_area);
 			
 			target_file_textField = new JTextField();
-			target_file_textField.setToolTipText("Path to a File");
+			target_file_textField.setToolTipText("Path to Files");
 			target_file_textField.setEditable(false);
 			target_file_textField.setColumns(10);
 			target_file_textField.setBounds(120, 11, 377, 20);
 			file_encryption_panel.add(target_file_textField);
 			
 
-			Button target_file_btn = new Button("Target File");
+			Button target_file_btn = new Button("Target Files");
 			target_file_btn.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) {
 					File workingDirectory = new File(System.getProperty("user.dir"));
 			        JFileChooser fileChooser = new JFileChooser();
+			        String file_names_buffer = "";
+			        fileChooser.setDialogTitle("Multiple file Selection:");
+			        fileChooser.setMultiSelectionEnabled(true);
+			        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			        fileChooser.setCurrentDirectory(workingDirectory);
 			        int returnValue = fileChooser.showOpenDialog(null);
 			        if (returnValue == JFileChooser.APPROVE_OPTION) {
-			          File targetFile = fileChooser.getSelectedFile();
-			          	fe_debug_area.append("Using File: " + targetFile.toString() + "\n");
-			          	target_file_textField.setText(targetFile.toString());
+			        	File[] targetFiles = fileChooser.getSelectedFiles();
+			        	for (File file : targetFiles) {
+							if (file.isFile()) {
+								file_names_buffer += file.getName() + ", ";
+								target_files_array.add(file.getAbsolutePath());
+								fe_debug_area.append("Using File: " + file.getAbsolutePath() + "\n");
+							}
+						}
+						target_file_textField.setText(file_names_buffer);
 			        }
-				}
+		   		}
 			});
 			target_file_btn.setFont(new Font("Tahoma", Font.PLAIN, 12));
 			target_file_btn.setBackground(new Color(0, 191, 255));
@@ -287,23 +281,32 @@ public class Crypto extends JFrame{
 			fe_go_btn.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					String current_mode = set_fe_mode.getSelectedItem();// picking the current mode
-					String target_file = target_file_textField.getText();
 					String passwd = fe_key_field.getText();
-					try {
-							aes_hp.processFile(passwd, current_mode, target_file, fe_debug_area);
-						
-					} catch (InvalidKeyException e1) {
-						e1.printStackTrace();
-					} catch (IllegalBlockSizeException e1) {
-						e1.printStackTrace();
-					} catch (BadPaddingException e1) {
-						e1.printStackTrace();
-					} catch (NoSuchPaddingException e1) {
-						e1.printStackTrace();
-					} catch (NoSuchAlgorithmException e1) {
-						e1.printStackTrace();
-					} catch (IOException e1) {
-						e1.printStackTrace();
+					if(target_files_array.isEmpty() ) {
+						JOptionPane.showMessageDialog(null,"Please make sure you have selected a File OR Files (CTRL-Click)!");
+						throw new EmptyStackException();
+					}
+					if(passwd.isEmpty()) {
+						JOptionPane.showMessageDialog(null,"Please make sure you have Loaded or Generated a Key!");
+						throw new EmptyStackException();
+					}
+					for (String target_file : target_files_array) {
+						try {
+								aes_hp.processFile(passwd, current_mode, target_file, fe_debug_area);
+							
+						} catch (InvalidKeyException e1) {
+							e1.printStackTrace();
+						} catch (IllegalBlockSizeException e1) {
+							e1.printStackTrace();
+						} catch (BadPaddingException e1) {
+							e1.printStackTrace();
+						} catch (NoSuchPaddingException e1) {
+							e1.printStackTrace();
+						} catch (NoSuchAlgorithmException e1) {
+							e1.printStackTrace();
+						} catch (IOException e1) {
+							e1.printStackTrace();
+						}
 					}
 				}
 			});
