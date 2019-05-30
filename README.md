@@ -9,7 +9,8 @@ Java based encryption / decryption program, with GUI interface
    * Hide Text within any image!
 
 ## Demo Video
-[![IMAGE ALT TEXT HERE](http://i.imgur.com/LJo7GYW.png)](https://www.youtube.com/watch?v=xbM4SDkMtKA)
+[![IMAGE ALT TEXT HERE](https://i.imgur.com/0tiKljw.png)](https://www.youtube.com/watch?v=IOgdQgOtofg)
+Video PlayList -- https://www.youtube.com/watch?v=xbM4SDkMtKA&list=PLrLLkmVtoBUoBjVrzlLOKycyruPT65HYv
 
 ## Program Images
 
