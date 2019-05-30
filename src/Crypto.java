@@ -208,6 +208,7 @@ public class Crypto extends JFrame{
 			Button target_file_btn = new Button("Target Files");
 			target_file_btn.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) {
+					target_files_array.clear();
 					File workingDirectory = new File(System.getProperty("user.dir"));
 			        JFileChooser fileChooser = new JFileChooser();
 			        String file_names_buffer = "";
