@@ -5,7 +5,7 @@ Java based encryption / decryption program, with GUI interface
    * AES Encryption
    * Simple GUI Interface
    * Save/Load/Generate Keys
-   * Encrypt Text/Files
+   * Encrypt Text/Images/Docs/Videos And Many more!
    * Hide Text within any image!
 
 ## Demo Video
